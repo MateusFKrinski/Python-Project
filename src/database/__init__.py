@@ -4,11 +4,11 @@ import uuid
 
 class Database:
     def __init__(self, host, port, database, user, password):
-        self.host = host
-        self.port = port
-        self.database = database
-        self.user = user
-        self.password = password
+        self.host = str(host)
+        self.port = str(port)
+        self.database = str(database)
+        self.user = str(user)
+        self.password = str(password)
 
     def setup_database(self):
         conn = psycopg2.connect(
@@ -191,8 +191,3 @@ class Database:
                 cur.close()
             if conn:
                 conn.close()
-
-
-db = Database(database="BlackMambaBot", user="postgres", password="1234", host="localhost", port="5432")
-
-print(db.search_themes_day_per_month(month="01", year="2024"))
