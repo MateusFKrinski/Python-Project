@@ -4,7 +4,7 @@ genai.configure(api_key="AIzaSyB9LTQSR0DgOUXRhSwmymTV0gj1CRJDr2E")
 model = genai.GenerativeModel("gemini-pro")
 
 
-class Genai:
+class Gemini:
     def __init__(self, generic_theme):
         self.generic_theme = generic_theme
 

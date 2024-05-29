@@ -4,11 +4,11 @@ import uuid
 
 class Database:
     def __init__(self, host, port, database, user, password):
-        self.host = str(host)
-        self.port = str(port)
-        self.database = str(database)
-        self.user = str(user)
-        self.password = str(password)
+        self.host = host
+        self.port = port
+        self.database = database
+        self.user = user
+        self.password = password
 
     def setup_database(self):
         conn = psycopg2.connect(
@@ -16,7 +16,7 @@ class Database:
         conn.autocommit = True
         cur = conn.cursor()
 
-        cur.execute("""SELECT 1 FROM pg_database WHERE datname = '%s'""", self.database)
+        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self.database,))
         exists = cur.fetchone()
 
         if not exists:
@@ -65,11 +65,11 @@ class Database:
             conn = psycopg2.connect(
                 f"dbname={self.database} user={self.user} port={self.port} host={self.host} password={self.password}")
             cur = conn.cursor()
-            cur.execute("""SELECT id FROM Themes WHERE month = %s AND theme = %s""", (f"01/{month}/{year}", theme))
+            cur.execute("""SELECT id FROM Themes WHERE month = %s""", (f"01/{month}/{year}",))
             result = cur.fetchone()
 
             if result:
-                return None
+                return result[0]
             else:
                 cur.execute("""INSERT INTO Themes (id, month, theme) VALUES (%s, %s, %s)""",
                             (str(uuid.uuid4()), f"01/{month}/{year}", theme))
@@ -171,17 +171,35 @@ class Database:
             if conn:
                 conn.close()
 
-    def search_themes_day_per_day(self, day, month, year):
+    def search_themes_day_per_day(self, date):
         conn = None
         cur = None
         try:
             conn = psycopg2.connect(
                 f"dbname={self.database} user={self.user} port={self.port} host={self.host} password={self.password}")
             cur = conn.cursor()
-            cur.execute("""SELECT * FROM todaythemes WHERE date = %s""",
-                        f"{year}/{month}/{day}")
+            cur.execute("""SELECT * FROM todaythemes WHERE date = %s""", (date,))
             result = cur.fetchall()
             return result
+        except psycopg2.Error as error:
+            print(f"Error: {error}")
+            if conn:
+                conn.rollback()
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+
+    def delete_today_themes_by_theme_id(self, theme_id):
+        conn = None
+        cur = None
+        try:
+            conn = psycopg2.connect(
+                f"dbname={self.database} user={self.user} port={self.port} host={self.host} password={self.password}")
+            cur = conn.cursor()
+            cur.execute("""DELETE FROM TodayThemes WHERE themeId = %s""", (theme_id,))
+            conn.commit()
         except psycopg2.Error as error:
             print(f"Error: {error}")
             if conn:
